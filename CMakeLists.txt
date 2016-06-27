@@ -11,15 +11,8 @@ set (XMail_VERSION_MINOR 27)
 #    CFLAGS := $(CFLAGS) -D_FILE_OFFSET_BITS=64
 #    CFLAGS := $(CFLAGS) -D_FILE_OFFSET_BITS=$(XMAIL_FILE_OFF_BITS)
 #
-# WITH_SSL_INCLUDE
-#    CFLAGS := $(CFLAGS) -I$(WITH_SSL_INCLUDE)
-# WITH_SSL_LIB
-#    LDFLAGS := $(LDFLAGS) -L$(WITH_SSL_LIB)
-# SSLLIBS
-#    SSLLIBS = -lssl -lcrypto
 
 # On Linux XMails expcts
-#add_definitions(-DOPENCV_VERSION=${OpenCV_VERSION})
 #add_definitions( -D__LINUX__)
 add_definitions( 
     -D__UNIX__ -D__LINUX__ -D_REENTRANT=1 -D_THREAD_SAFE=1 -DHAS_SYSMACHINE 
@@ -29,17 +22,11 @@ include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
 
 find_package(OpenSSL REQUIRED)
-message("OPENSSL_INCLUDE_DIR: ${OPENSSL_INCLUDE_DIR}")
-message("OPENSSL_LIBRARIES: ${OPENSSL_LIBRARIES}")
-message("OPENSSL_ROOT_DIR: ${OPENSSL_ROOT_DIR}")
 include_directories(${OPENSSL_INCLUDE_DIR})
-message("LIBS: ${LIBS}")
 set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
-message("LIBS: ${LIBS}")
 
 find_package (Threads)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
-message("LIBS: ${LIBS}")
 
 set( MAINSRC MainLinux.cpp )
 set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
@@ -89,7 +76,6 @@ add_custom_command (
 # MAILSVR
 add_executable( XMail ${SVRSRCS} ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
 target_link_libraries(XMail ${LIBS} -ldl)
-#target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES})
 #add_executable( CtrlClnt )
 #add_executable( XMCrypt )
 #add_executable( MkUsers )
