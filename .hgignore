@@ -1,3 +1,4 @@
 syntax: glob
 
 win32ssl/
+build/
