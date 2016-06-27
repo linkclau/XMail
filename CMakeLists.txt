@@ -25,20 +25,21 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 
-find_package (Threads)
+find_package (Threads REQUIRED)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 set( MAINSRC MainLinux.cpp )
 set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
 
-# On x86_64 it is actually 
-#	/usr/include/x86_64-linux-gnu/sys/eventfd.h
-# /usr/include/sys/eventfd.h
-#    SYSSRCS := $(SYSSRCS) SysOsEventfd_eventfd.cpp
-#    CFLAGS := $(CFLAGS) -DHAS_EVENTFD
-#    SYSSRCS := $(SYSSRCS) SysOsEventfd_pipe.cpp
-set( SYSSRCS ${SYSSRCS} SysOsEventfd_eventfd.cpp )
-add_definitions( -DHAS_EVENTFD )
+include (CheckFunctionExists)
+check_function_exists (eventfd HAS_EVENTFD)
+if (HAS_EVENTFD)
+  set( SYSSRCS ${SYSSRCS} SysOsEventfd_eventfd.cpp )
+  add_definitions( -DHAS_EVENTFD )
+else()
+  set( SYSSRCS ${SYSSRCS} SysOsEventfd_pipe.cpp )
+endif(HAS_EVENTFD)
+
 
 
 set( SVRSRCS ${MAINSRC} ${SYSSRCS} 
