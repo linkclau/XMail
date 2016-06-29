@@ -27,8 +27,6 @@ set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 find_package (Threads REQUIRED)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-set( MAINSRC MainLinux.cpp )
-set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
 
 include (CheckFunctionExists)
 check_function_exists (eventfd HAS_EVENTFD)
@@ -48,6 +46,8 @@ if (SYS_HAS_SENDFILE)
 endif(SYS_HAS_SENDFILE)
 
 
+set( MAINSRC MainLinux.cpp )
+set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
 set( SVRSRCS ${MAINSRC} ${SYSSRCS} 
     SysDepCommon.cpp BuffSock.cpp CTRLSvr.cpp 
     DNS.cpp DNSCache.cpp Errors.cpp 
