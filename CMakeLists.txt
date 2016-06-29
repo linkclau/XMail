@@ -5,7 +5,6 @@ set (XMail_VERSION_MAJOR 1)
 set (XMail_VERSION_MINOR 27)
 
 
-
 # Options from the Maekfile
 # XMAIL_FILE_OFF_BITS)", "")
 #    CFLAGS := $(CFLAGS) -D_FILE_OFFSET_BITS=64
@@ -13,11 +12,11 @@ set (XMail_VERSION_MINOR 27)
 #
 
 # On Linux XMails expcts
-#add_definitions( -D__LINUX__)
-add_definitions( 
-    -D__UNIX__ -D__LINUX__ -D_REENTRANT=1 -D_THREAD_SAFE=1 -DHAS_SYSMACHINE 
-        -D_GNU_SOURCE -D_LARGEFILE64_SOURCE -D_POSIX_PTHREAD_SEMANTICS -DSYS_HAS_SENDFILE )
-#include_directories( ${PROJECT_SOURCE_DIR} )
+add_definitions( -D__LINUX__)
+add_definitions( -DHAS_SYSMACHINE)
+#add_definitions( -D__UNIX__ 
+#  -D_REENTRANT=1 -D_THREAD_SAFE=1 
+#  -D_GNU_SOURCE -D_LARGEFILE64_SOURCE -D_POSIX_PTHREAD_SEMANTICS )
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
 
@@ -40,6 +39,13 @@ else()
   set( SYSSRCS ${SYSSRCS} SysOsEventfd_pipe.cpp )
 endif(HAS_EVENTFD)
 
+# Ectually XMail has a bug. If SYS_HAS_SENDFILE is not defined
+# SysSendFile will be defined twice 
+check_function_exists (sendfile SYS_HAS_SENDFILE)
+if (SYS_HAS_SENDFILE)
+  #message( "SYS_HAS_SENDFILE: ${HAS_SYSMACHINE}" ) 
+  add_definitions( -DSYS_HAS_SENDFILE )
+endif(SYS_HAS_SENDFILE)
 
 
 set( SVRSRCS ${MAINSRC} ${SYSSRCS} 
@@ -63,6 +69,7 @@ set( CCLNSRCS ${SYSSRCS}
     MD5.cpp MiscUtils.cpp 
     CTRLClient.cpp Errors.cpp SSLBind.cpp SSLMisc.cpp
 )
+
 
 
 add_executable( MkMachDep MkMachDep.cpp )
