@@ -84,7 +84,8 @@ add_custom_command (
 # MAILSVR
 add_executable( XMail ${SVRSRCS} ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
 target_link_libraries(XMail ${LIBS} -ldl)
-#add_executable( CtrlClnt )
+add_executable( CtrlClnt ${CCLNSRCS} )
+target_link_libraries(CtrlClnt ${LIBS} -ldl)
 #add_executable( XMCrypt )
 #add_executable( MkUsers )
 #add_executable( sendmail )
