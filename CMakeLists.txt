@@ -27,6 +27,8 @@ set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 find_package (Threads REQUIRED)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
+set( MAINSRC MainLinux.cpp )
+set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
 
 include (CheckFunctionExists)
 check_function_exists (eventfd HAS_EVENTFD)
@@ -46,8 +48,6 @@ if (SYS_HAS_SENDFILE)
 endif(SYS_HAS_SENDFILE)
 
 
-set( MAINSRC MainLinux.cpp )
-set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
 set( SVRSRCS ${MAINSRC} ${SYSSRCS} 
     SysDepCommon.cpp BuffSock.cpp CTRLSvr.cpp 
     DNS.cpp DNSCache.cpp Errors.cpp 
@@ -80,13 +80,14 @@ add_custom_command (
   DEPENDS MkMachDep
 )
 
+set(LIBS ${LIBS} -ldl )
 
 # MAILSVR
 add_executable( XMail ${SVRSRCS} ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
-target_link_libraries(XMail ${LIBS} -ldl)
+target_link_libraries(XMail ${LIBS} )
 add_executable( CtrlClnt ${CCLNSRCS} )
-target_link_libraries(CtrlClnt ${LIBS} -ldl)
-#add_executable( XMCrypt )
+target_link_libraries(CtrlClnt ${LIBS} )
+add_executable( XMCrypt XMCrypt.cpp)
 #add_executable( MkUsers )
 #add_executable( sendmail )
 
