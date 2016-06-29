@@ -47,27 +47,36 @@ if (SYS_HAS_SENDFILE)
   add_definitions( -DSYS_HAS_SENDFILE )
 endif(SYS_HAS_SENDFILE)
 
-
-set( SVRSRCS ${MAINSRC} ${SYSSRCS} 
-    SysDepCommon.cpp BuffSock.cpp CTRLSvr.cpp 
-    DNS.cpp DNSCache.cpp Errors.cpp 
-    ExtAliases.cpp FINGSvr.cpp MailConfig.cpp MailSvr.cpp 
-    Maildir.cpp MailDomains.cpp MD5.cpp 
-    MiscUtils.cpp LMAILSvr.cpp AliasDomain.cpp POP3GwLink.cpp 
-    POP3Svr.cpp POP3Utils.cpp PSYNCSvr.cpp 
-    ResLocks.cpp SList.cpp SMAILSvr.cpp TabIndex.cpp SMAILUtils.cpp 
-    SMTPSvr.cpp SMTPUtils.cpp 
-    ShBlocks.cpp StrUtils.cpp MessQueue.cpp QueueUtils.cpp 
-    SvrUtils.cpp UsrMailList.cpp UsrAuth.cpp 
-    UsrUtils.cpp Base64Enc.cpp Filter.cpp SSLBind.cpp SSLConfig.cpp 
-    Hash.cpp Array.cpp SSLMisc.cpp
+set( COMMONSRCS 
+Base64Enc.cpp
+BuffSock.cpp
+Errors.cpp
+MD5.cpp
+MiscUtils.cpp
+SSLBind.cpp
+SSLMisc.cpp
+StrUtils.cpp
+SysDepCommon.cpp
 )
 
 
-set( CCLNSRCS ${SYSSRCS} 
-    SysDepCommon.cpp Base64Enc.cpp BuffSock.cpp StrUtils.cpp 
-    MD5.cpp MiscUtils.cpp 
-    CTRLClient.cpp Errors.cpp SSLBind.cpp SSLMisc.cpp
+set( SVRSRCS ${MAINSRC} 
+    CTRLSvr.cpp 
+    DNS.cpp DNSCache.cpp 
+    ExtAliases.cpp FINGSvr.cpp MailConfig.cpp MailSvr.cpp 
+    Maildir.cpp MailDomains.cpp 
+    LMAILSvr.cpp AliasDomain.cpp POP3GwLink.cpp 
+    POP3Svr.cpp POP3Utils.cpp PSYNCSvr.cpp 
+    ResLocks.cpp SList.cpp SMAILSvr.cpp TabIndex.cpp SMAILUtils.cpp 
+    SMTPSvr.cpp SMTPUtils.cpp 
+    ShBlocks.cpp MessQueue.cpp QueueUtils.cpp 
+    SvrUtils.cpp UsrMailList.cpp UsrAuth.cpp 
+    UsrUtils.cpp Filter.cpp SSLConfig.cpp 
+    Hash.cpp Array.cpp 
+)
+
+
+set( CCLNSRCS CTRLClient.cpp 
 )
 
 
@@ -82,10 +91,16 @@ add_custom_command (
 
 set(LIBS ${LIBS} -ldl )
 
+add_library(common_objects OBJECT ${COMMONSRCS} )
+add_library(system_objects OBJECT ${SYSSRCS} 
+    ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
+
 # MAILSVR
-add_executable( XMail ${SVRSRCS} ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
+add_executable( XMail ${SVRSRCS} 
+    $<TARGET_OBJECTS:system_objects> $<TARGET_OBJECTS:common_objects> )
 target_link_libraries(XMail ${LIBS} )
-add_executable( CtrlClnt ${CCLNSRCS} )
+add_executable( CtrlClnt CTRLClient.cpp 
+    $<TARGET_OBJECTS:system_objects> $<TARGET_OBJECTS:common_objects> )
 target_link_libraries(CtrlClnt ${LIBS} )
 add_executable( XMCrypt XMCrypt.cpp )
 add_executable( MkUsers MkUsers.cpp )
