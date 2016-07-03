@@ -12,7 +12,6 @@ set (XMail_VERSION_MINOR 27)
 #
 
 # On Linux XMails expcts
-add_definitions( -D__LINUX__)
 add_definitions( -DHAS_SYSMACHINE)
 #add_definitions( -D__UNIX__ 
 #  -D_REENTRANT=1 -D_THREAD_SAFE=1 
@@ -27,8 +26,32 @@ set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 find_package (Threads REQUIRED)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-set( MAINSRC MainLinux.cpp )
-set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
+INCLUDE (CheckIncludeFiles)
+# usage: CHECK_INCLUDE_FILES (<header> <RESULT_VARIABLE> )
+check_include_files(kvm.h HAS_KVM_H )
+
+message( "CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}" )
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	add_definitions( -D__BSD__)
+	add_definitions( -D__DARWIN__)
+	add_definitions( -D_REENTRANT=1 -D_THREAD_SAFE=1 -D_POSIX_PTHREAD_SEMANTICS )
+	## I don't like this 
+	add_definitions( -D__DARWIN_10_5__)
+	set( MAINSRC MainBSD.cpp )
+	set( SYSSRCS SysDepBSD.cpp SysDepUnix.cpp )
+	set(LIBS ${LIBS} -lc )
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+	add_definitions( -D__LINUX__)
+	set( MAINSRC MainLinux.cpp )
+	set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
+	# Actually XMail has a bug. If SYS_HAS_SENDFILE is not defined
+	# SysSendFile will be defined twice 
+	check_function_exists (sendfile SYS_HAS_SENDFILE)
+	if (SYS_HAS_SENDFILE)
+	  #message( "SYS_HAS_SENDFILE: ${HAS_SYSMACHINE}" ) 
+	  add_definitions( -DSYS_HAS_SENDFILE )
+	endif(SYS_HAS_SENDFILE)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 include (CheckFunctionExists)
 check_function_exists (eventfd HAS_EVENTFD)
@@ -39,13 +62,6 @@ else()
   set( SYSSRCS ${SYSSRCS} SysOsEventfd_pipe.cpp )
 endif(HAS_EVENTFD)
 
-# Ectually XMail has a bug. If SYS_HAS_SENDFILE is not defined
-# SysSendFile will be defined twice 
-check_function_exists (sendfile SYS_HAS_SENDFILE)
-if (SYS_HAS_SENDFILE)
-  #message( "SYS_HAS_SENDFILE: ${HAS_SYSMACHINE}" ) 
-  add_definitions( -DSYS_HAS_SENDFILE )
-endif(SYS_HAS_SENDFILE)
 
 set( COMMONSRCS 
 Base64Enc.cpp
@@ -75,11 +91,7 @@ set( SVRSRCS ${MAINSRC}
     Hash.cpp Array.cpp 
 )
 
-
-set( CCLNSRCS CTRLClient.cpp 
-)
-
-
+set( CCLNSRCS CTRLClient.cpp )
 
 add_executable( MkMachDep MkMachDep.cpp )
 
@@ -91,7 +103,8 @@ add_custom_command (
 
 set(LIBS ${LIBS} -ldl )
 
-add_library(common_objects OBJECT ${COMMONSRCS} )
+add_library(common_objects OBJECT ${COMMONSRCS} 
+	${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h)
 add_library(system_objects OBJECT ${SYSSRCS} 
     ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
 
