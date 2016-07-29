@@ -1,7 +1,7 @@
 # XMail
-XMail is an Internet and intranet mail server featuring an ESMTP server, POP3 server, finger server, with TLS support developped my Davide Libenzi
+XMail is an Internet and intranet mail server with TLS support developped by Davide Libenzi, featuring an ESMTP server, POP3 server, finger server.
 
 
-THis is a clone from http://xmailserver.org/
+THis is a copy of 1.27 from http://xmailserver.org/
 
 
