@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 2.8.11 )
 project(XMail)
 # The version number.
 set (XMail_VERSION_MAJOR 1)
@@ -48,7 +48,9 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
 	# Actually XMail has a bug. If SYS_HAS_SENDFILE is not defined
 	# SysSendFile will be defined twice 
-	check_function_exists (sendfile SYS_HAS_SENDFILE)
+        include(CheckFunctionExists)
+        CHECK_FUNCTION_EXISTS (sendfile SYS_HAS_SENDFILE)
+        #check_function_exists (sendfile SYS_HAS_SENDFILE)
 	if (SYS_HAS_SENDFILE)
 	  #message( "SYS_HAS_SENDFILE: ${HAS_SYSMACHINE}" ) 
 	  add_definitions( -DSYS_HAS_SENDFILE )
