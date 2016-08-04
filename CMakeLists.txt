@@ -12,7 +12,6 @@ set (XMail_VERSION_MINOR 27)
 #
 
 # On Linux XMails expcts
-add_definitions( -DHAS_SYSMACHINE)
 #add_definitions( -D__UNIX__ 
 #  -D_REENTRANT=1 -D_THREAD_SAFE=1 
 #  -D_GNU_SOURCE -D_LARGEFILE64_SOURCE -D_POSIX_PTHREAD_SEMANTICS )
@@ -31,17 +30,20 @@ INCLUDE (CheckIncludeFiles)
 check_include_files(kvm.h HAS_KVM_H )
 
 message( "CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}" )
+message( "CMAKE_VS_PLATFORM_NAME ${CMAKE_VS_PLATFORM_NAME}" )
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	add_definitions( -D__BSD__)
 	add_definitions( -D__DARWIN__)
 	add_definitions( -D_REENTRANT=1 -D_THREAD_SAFE=1 -D_POSIX_PTHREAD_SEMANTICS )
 	## I don't like this 
 	add_definitions( -D__DARWIN_10_5__)
+	add_definitions( -DHAS_SYSMACHINE)
 	set( MAINSRC MainBSD.cpp )
 	set( SYSSRCS SysDepBSD.cpp SysDepUnix.cpp )
 	set(LIBS ${LIBS} -lc )
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	add_definitions( -D__LINUX__)
+	add_definitions( -DHAS_SYSMACHINE)
 	set( MAINSRC MainLinux.cpp )
 	set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
 	# Actually XMail has a bug. If SYS_HAS_SENDFILE is not defined
@@ -51,28 +53,42 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	  #message( "SYS_HAS_SENDFILE: ${HAS_SYSMACHINE}" ) 
 	  add_definitions( -DSYS_HAS_SENDFILE )
 	endif(SYS_HAS_SENDFILE)
+	set(LIBS ${LIBS} -ldl )
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  add_compile_options( "/nologo" )
+  set( MAINSRC MainWin.cpp )
+  add_definitions( /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE )
+  set( SYSSRCS SysDepWin.cpp )
+  set(LIBS ${LIBS}  winspool.lib uuid.lib )
+	  #kernel32.lib user32.lib gdi32.lib 
+  #comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib 
+  # odbc32.lib odbccp32.lib ws2_32.lib )
+ELSE( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
+  message( "${CMAKE_SYSTEM_NAME} is unsupported" FATAL_ERROR )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-include (CheckFunctionExists)
-check_function_exists (eventfd HAS_EVENTFD)
-if (HAS_EVENTFD)
-  set( SYSSRCS ${SYSSRCS} SysOsEventfd_eventfd.cpp )
-  add_definitions( -DHAS_EVENTFD )
-else()
-  set( SYSSRCS ${SYSSRCS} SysOsEventfd_pipe.cpp )
-endif(HAS_EVENTFD)
+if( UNIX )
+	include (CheckFunctionExists)
+	check_function_exists (eventfd HAS_EVENTFD)
+	if (HAS_EVENTFD)
+	  set( SYSSRCS ${SYSSRCS} SysOsEventfd_eventfd.cpp )
+	  add_definitions( -DHAS_EVENTFD )
+	else()
+	  set( SYSSRCS ${SYSSRCS} SysOsEventfd_pipe.cpp )
+	endif(HAS_EVENTFD)
+endif(UNIX)
 
 
 set( COMMONSRCS 
-Base64Enc.cpp
-BuffSock.cpp
-Errors.cpp
-MD5.cpp
-MiscUtils.cpp
-SSLBind.cpp
-SSLMisc.cpp
-StrUtils.cpp
-SysDepCommon.cpp
+	Base64Enc.cpp
+	BuffSock.cpp
+	Errors.cpp
+	MD5.cpp
+	MiscUtils.cpp
+	SSLBind.cpp
+	SSLMisc.cpp
+	StrUtils.cpp
+	SysDepCommon.cpp
 )
 
 
@@ -101,7 +117,6 @@ add_custom_command (
   DEPENDS MkMachDep
 )
 
-set(LIBS ${LIBS} -ldl )
 
 add_library(common_objects OBJECT ${COMMONSRCS} 
 	${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h)
