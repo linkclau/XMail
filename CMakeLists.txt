@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.0)
 project(XMail)
 # The version number.
 set (XMail_VERSION_MAJOR 1)
@@ -11,7 +11,6 @@ set (XMail_VERSION_MINOR 27)
 #    CFLAGS := $(CFLAGS) -D_FILE_OFFSET_BITS=$(XMAIL_FILE_OFF_BITS)
 #
 
-# On Linux XMails expcts
 #add_definitions( -D__UNIX__ 
 #  -D_REENTRANT=1 -D_THREAD_SAFE=1 
 #  -D_GNU_SOURCE -D_LARGEFILE64_SOURCE -D_POSIX_PTHREAD_SEMANTICS )
@@ -37,6 +36,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	add_definitions( -D_REENTRANT=1 -D_THREAD_SAFE=1 -D_POSIX_PTHREAD_SEMANTICS )
 	## I don't like this 
 	add_definitions( -D__DARWIN_10_5__)
+        # On Linux XMails expects
 	add_definitions( -DHAS_SYSMACHINE)
 	set( MAINSRC MainBSD.cpp )
 	set( SYSSRCS SysDepBSD.cpp SysDepUnix.cpp )
