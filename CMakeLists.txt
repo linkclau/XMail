@@ -26,7 +26,9 @@ set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
 find_package (Threads REQUIRED)
 set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-INCLUDE (CheckIncludeFiles)
+include (CheckIncludeFiles)
+include (CheckFunctionExists)
+
 # usage: CHECK_INCLUDE_FILES (<header> <RESULT_VARIABLE> )
 check_include_files(kvm.h HAS_KVM_H )
 
@@ -53,7 +55,6 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	endif(SYS_HAS_SENDFILE)
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-include (CheckFunctionExists)
 check_function_exists (eventfd HAS_EVENTFD)
 if (HAS_EVENTFD)
   set( SYSSRCS ${SYSSRCS} SysOsEventfd_eventfd.cpp )
@@ -94,7 +95,6 @@ set( SVRSRCS ${MAINSRC}
 set( CCLNSRCS CTRLClient.cpp )
 
 add_executable( MkMachDep MkMachDep.cpp )
-
 add_custom_command (
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h
   COMMAND MkMachDep > ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h
@@ -103,18 +103,16 @@ add_custom_command (
 
 set(LIBS ${LIBS} -ldl )
 
-add_library(common_objects OBJECT ${COMMONSRCS} 
-	${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h)
-add_library(system_objects OBJECT ${SYSSRCS} 
+add_library(system_objects OBJECT ${SYSSRCS} ${COMMONSRCS} 
     ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
 
 # MAILSVR
-add_executable( XMail ${SVRSRCS} 
-    $<TARGET_OBJECTS:system_objects> $<TARGET_OBJECTS:common_objects> )
+add_executable( XMail ${SVRSRCS} $<TARGET_OBJECTS:system_objects> )
 target_link_libraries(XMail ${LIBS} )
-add_executable( CtrlClnt CTRLClient.cpp 
-    $<TARGET_OBJECTS:system_objects> $<TARGET_OBJECTS:common_objects> )
+
+add_executable( CtrlClnt CTRLClient.cpp $<TARGET_OBJECTS:system_objects>  )
 target_link_libraries(CtrlClnt ${LIBS} )
+
 add_executable( XMCrypt XMCrypt.cpp )
 add_executable( MkUsers MkUsers.cpp )
 add_executable( sendmail SendMail.cpp )
