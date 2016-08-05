@@ -61,7 +61,7 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   set( MAINSRC MainWin.cpp )
   add_definitions( /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE )
   set( SYSSRCS SysDepWin.cpp )
-  set(LIBS ${LIBS}  winspool.lib uuid.lib )
+  set(LIBS ${LIBS} Ws2_32.lib )
 	  #kernel32.lib user32.lib gdi32.lib 
   #comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib 
   # odbc32.lib odbccp32.lib ws2_32.lib )
