@@ -29,29 +29,19 @@ set( SYSSRCS SysDep.h SysInclude.h SysLists.h SysMacros.h SysTypes.h CommTypes.h
 message( "CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}" )
 message( "CMAKE_VS_PLATFORM_NAME ${CMAKE_VS_PLATFORM_NAME}" )
 get_cmake_property(_variableNames VARIABLES)
-foreach (_variableName ${_variableNames})
-      message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
+#foreach (_variableName ${_variableNames})
+#      message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
+include (CheckIncludeFiles)
+include (CheckFunctionExists)
+
 if( UNIX )
   list(APPEND SYSSRCS SysDepUnix.cpp  SysDepUnix.h  SysTypesUnix.h )
-
-  include (CheckIncludeFiles)
   # usage: CHECK_INCLUDE_FILES (<headers> <RESULT_VARIABLE> )
   check_include_files(kvm.h HAS_KVM_H )
-
-  include (CheckFunctionExists)
-  check_function_exists (eventfd HAS_EVENTFD)
-  if (HAS_EVENTFD AND LINUX)
-    list(APPEND SYSSRCS SysOsEventfd_eventfd.cpp )
-    add_definitions( -DHAS_EVENTFD )
-  else()
-    list(APPEND SYSSRCS SysOsEventfd_pipe.cpp )
-  endif(HAS_EVENTFD)
-
   add_definitions(-DHAS_SYSMACHINE)
   list(APPEND SYSSRCS ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
 endif(UNIX)
-
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   add_definitions( -D__BSD__)
@@ -72,11 +62,11 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
   if (SYS_HAS_SENDFILE)
     add_definitions( -DSYS_HAS_SENDFILE )
   endif(SYS_HAS_SENDFILE)
+  check_function_exists (eventfd HAS_EVENTFD)
   list(APPEND LIBS -ldl )
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
-  add_definitions( -D__UNIX__ -D__SOLARIS__ 
-      -D_GNU_SOURCE -D_LARGEFILE64_SOURCE -D_POSIX_)
-  list(APPEND LIBS -ldl -lsocket -lnsl -lrt )
+  add_definitions( -D__SOLARIS__ )
+  list(APPEND LIBS -lsocket )
   set( MAINSRC MainSolaris.cpp )
   list(APPEND SYSSRCS SysDepSolaris.cpp SysIncludeSolaris.h )
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
@@ -91,8 +81,14 @@ ELSE( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
   #SysIncludeSolaris.h SysTypesSolaris.h 
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
+if (HAS_EVENTFD )
+  list(APPEND SYSSRCS SysOsEventfd_eventfd.cpp )
+  add_definitions( -DHAS_EVENTFD )
+else()
+  list(APPEND SYSSRCS SysOsEventfd_pipe.cpp )
+endif(HAS_EVENTFD)
 
-# Specify headers to include them into the Visual Studion Project
+# Specify headers to include them into the Visual Studio Project
 # It would compile as well without specifying them
 set( COMMONSRCS 
   Base64Enc.cpp Base64Enc.h
