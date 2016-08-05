@@ -22,7 +22,7 @@
 
 #include "SysInclude.h"
 #include "SysDep.h"
-#include "SvrDefines.h"
+//#include "SvrDefines.h"
 #include "StrUtils.h"
 
 #define INVCHAR             '^'
