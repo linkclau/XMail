@@ -5,7 +5,7 @@ set (XMail_VERSION_MAJOR 1)
 set (XMail_VERSION_MINOR 27)
 
 
-# Options from the Maekfile
+# Options from the Makefile
 # XMAIL_FILE_OFF_BITS)", "")
 #    CFLAGS := $(CFLAGS) -D_FILE_OFFSET_BITS=64
 #    CFLAGS := $(CFLAGS) -D_FILE_OFFSET_BITS=$(XMAIL_FILE_OFF_BITS)
@@ -19,71 +19,68 @@ include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
-set(LIBS ${LIBS} ${OPENSSL_LIBRARIES})
+list(APPEND LIBS ${OPENSSL_LIBRARIES})
 
 find_package (Threads REQUIRED)
-set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+list(APPEND LIBS ${CMAKE_THREAD_LIBS_INIT})
 
-INCLUDE (CheckIncludeFiles)
-# usage: CHECK_INCLUDE_FILES (<header> <RESULT_VARIABLE> )
-check_include_files(kvm.h HAS_KVM_H )
 
+set( SYSSRCS SysDep.h SysInclude.h SysLists.h SysMacros.h SysTypes.h CommTypes.h)
 message( "CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}" )
 message( "CMAKE_VS_PLATFORM_NAME ${CMAKE_VS_PLATFORM_NAME}" )
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	add_definitions( -D__BSD__)
-	add_definitions( -D__DARWIN__)
-	add_definitions( -D_REENTRANT=1 -D_THREAD_SAFE=1 -D_POSIX_PTHREAD_SEMANTICS )
-	## I don't like this 
-	add_definitions( -D__DARWIN_10_5__)
-        # On Linux XMails expects
-	add_definitions( -DHAS_SYSMACHINE)
-	set( MAINSRC MainBSD.cpp )
-        set( SYSSRCS SysDepBSD.cpp SysDepUnix.cpp SysIncludeLinux.h )
-	set(LIBS ${LIBS} -lc )
-ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-	add_definitions( -D__LINUX__)
-	add_definitions( -DHAS_SYSMACHINE)
-	set( MAINSRC MainLinux.cpp )
-	set( SYSSRCS SysDepLinux.cpp SysDepUnix.cpp )
-	# Actually XMail has a bug. If SYS_HAS_SENDFILE is not defined
-	# SysSendFile will be defined twice 
-        include(CheckFunctionExists)
-        CHECK_FUNCTION_EXISTS (sendfile SYS_HAS_SENDFILE)
-        #check_function_exists (sendfile SYS_HAS_SENDFILE)
-	if (SYS_HAS_SENDFILE)
-	  #message( "SYS_HAS_SENDFILE: ${HAS_SYSMACHINE}" ) 
-	  add_definitions( -DSYS_HAS_SENDFILE )
-	endif(SYS_HAS_SENDFILE)
-	set(LIBS ${LIBS} -ldl )
-ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-  add_compile_options( "/nologo" )
-  set( MAINSRC MainWin.cpp )
-  add_definitions( /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE )
-  set( SYSSRCS SysDepWin.cpp )
-  set(LIBS ${LIBS} Ws2_32.lib )
-ELSE( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
-  message( "${CMAKE_SYSTEM_NAME} is unsupported" FATAL_ERROR )
-ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
 if( UNIX )
+  list(APPEND SYSSRCS SysDepUnix.cpp  SysDepUnix.h  SysTypesUnix.h )
+
+  include (CheckIncludeFiles)
+  # usage: CHECK_INCLUDE_FILES (<headers> <RESULT_VARIABLE> )
+  check_include_files(kvm.h HAS_KVM_H )
+
   include (CheckFunctionExists)
   check_function_exists (eventfd HAS_EVENTFD)
   if (HAS_EVENTFD)
-    set( SYSSRCS ${SYSSRCS} SysOsEventfd_eventfd.cpp )
+    list(APPEND SYSSRCS SysOsEventfd_eventfd.cpp )
     add_definitions( -DHAS_EVENTFD )
   else()
-    set( SYSSRCS ${SYSSRCS} SysOsEventfd_pipe.cpp )
+    list(APPEND SYSSRCS SysOsEventfd_pipe.cpp )
   endif(HAS_EVENTFD)
 
-  #  SvrConfig.h SvrDefines.h 
-  #SysDep.h SysInclude.h SysLists.h SysMacros.h SysTypes.h
-  #SysIncludeWin.h  SysTypesWin.h 
-  #SysTypesUnix.h
-  #SysIncludeBSD.h SysTypesBSD.h 
-  #SysIncludeLinux.h SysTypesLinux.h
-  #SysIncludeSolaris.h SysTypesSolaris.h 
+  add_definitions(-DHAS_SYSMACHINE)
+  list(APPEND SYSSRCS ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
 endif(UNIX)
+
+
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  add_definitions( -D__BSD__)
+  add_definitions( -D__DARWIN__)
+  #add_definitions( -D_REENTRANT=1 -D_THREAD_SAFE=1 -D_POSIX_PTHREAD_SEMANTICS )
+  ## I don't like this 
+  add_definitions( -D__DARWIN_10_5__)
+  set( MAINSRC MainBSD.cpp )
+  list(APPEND SYSSRCS SysDepBSD.cpp SysIncludeBSD.h SysTypesBSD.h )
+  list(APPEND LIBS -lc )
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  add_definitions( -D__LINUX__)
+  set( MAINSRC MainLinux.cpp )
+  list(APPEND SYSSRCS SysDepLinux.cpp SysIncludeLinux.h SysTypesLinux.h )
+  # Actually XMail has a bug. If SYS_HAS_SENDFILE is not defined
+  # SysSendFile will be defined twice 
+  check_function_exists (sendfile SYS_HAS_SENDFILE)
+  if (SYS_HAS_SENDFILE)
+    add_definitions( -DSYS_HAS_SENDFILE )
+  endif(SYS_HAS_SENDFILE)
+  list(APPEND LIBS -ldl )
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  #add_compile_options( "/nologo" )
+  set( MAINSRC MainWin.cpp )
+  add_definitions( /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE )
+  list(APPEND SYSSRCS SysDepWin.cpp SysIncludeWin.h  SysTypesWin.h )
+  list(APPEND LIBS Ws2_32.lib )
+ELSE( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
+  # Support Solaris
+  message( "${CMAKE_SYSTEM_NAME} is unsupported" FATAL_ERROR )
+  #SysIncludeSolaris.h SysTypesSolaris.h 
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
 
 # Specify headers to include them into the Visual Studion Project
 # It would compile as well without specifying them
@@ -98,7 +95,6 @@ set( COMMONSRCS
   StrUtils.cpp StrUtils.h 
   SysDepCommon.cpp
   AppDefines.h
-  CommTypes.h
 )
 
 
@@ -136,10 +132,9 @@ set( SVRSRCS ${MAINSRC}
   SSLConfig.cpp  SSLConfig.h
   Hash.cpp  Hash.h
   Array.cpp  Array.h
+  SvrConfig.h SvrDefines.h 
   )
 
-
-set( CCLNSRCS CTRLClient.cpp )
 
 add_executable( MkMachDep MkMachDep.cpp )
 
@@ -150,17 +145,12 @@ add_custom_command (
 )
 
 
-add_library(common_objects OBJECT ${COMMONSRCS} 
-	${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h)
-add_library(system_objects OBJECT ${SYSSRCS} 
-    ${CMAKE_CURRENT_BINARY_DIR}/SysMachine.h )
+add_library(system_objects OBJECT ${COMMONSRCS} ${SYSSRCS} )
 
 # MAILSVR
-add_executable( XMail ${SVRSRCS} 
-    $<TARGET_OBJECTS:system_objects> $<TARGET_OBJECTS:common_objects> )
+add_executable( XMail ${SVRSRCS} $<TARGET_OBJECTS:system_objects> )
 target_link_libraries(XMail ${LIBS} )
-add_executable( CtrlClnt CTRLClient.cpp 
-    $<TARGET_OBJECTS:system_objects> $<TARGET_OBJECTS:common_objects> )
+add_executable( CtrlClnt CTRLClient.cpp $<TARGET_OBJECTS:system_objects>  )
 target_link_libraries(CtrlClnt ${LIBS} )
 add_executable( XMCrypt XMCrypt.cpp )
 add_executable( MkUsers MkUsers.cpp )
