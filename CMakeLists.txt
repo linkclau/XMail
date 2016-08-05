@@ -39,7 +39,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         # On Linux XMails expects
 	add_definitions( -DHAS_SYSMACHINE)
 	set( MAINSRC MainBSD.cpp )
-	set( SYSSRCS SysDepBSD.cpp SysDepUnix.cpp )
+        set( SYSSRCS SysDepBSD.cpp SysDepUnix.cpp SysIncludeLinux.h )
 	set(LIBS ${LIBS} -lc )
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	add_definitions( -D__LINUX__)
@@ -62,52 +62,82 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   add_definitions( /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE )
   set( SYSSRCS SysDepWin.cpp )
   set(LIBS ${LIBS} Ws2_32.lib )
-	  #kernel32.lib user32.lib gdi32.lib 
-  #comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib 
-  # odbc32.lib odbccp32.lib ws2_32.lib )
 ELSE( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
   message( "${CMAKE_SYSTEM_NAME} is unsupported" FATAL_ERROR )
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 if( UNIX )
-	include (CheckFunctionExists)
-	check_function_exists (eventfd HAS_EVENTFD)
-	if (HAS_EVENTFD)
-	  set( SYSSRCS ${SYSSRCS} SysOsEventfd_eventfd.cpp )
-	  add_definitions( -DHAS_EVENTFD )
-	else()
-	  set( SYSSRCS ${SYSSRCS} SysOsEventfd_pipe.cpp )
-	endif(HAS_EVENTFD)
+  include (CheckFunctionExists)
+  check_function_exists (eventfd HAS_EVENTFD)
+  if (HAS_EVENTFD)
+    set( SYSSRCS ${SYSSRCS} SysOsEventfd_eventfd.cpp )
+    add_definitions( -DHAS_EVENTFD )
+  else()
+    set( SYSSRCS ${SYSSRCS} SysOsEventfd_pipe.cpp )
+  endif(HAS_EVENTFD)
+
+  #  SvrConfig.h SvrDefines.h 
+  #SysDep.h SysInclude.h SysLists.h SysMacros.h SysTypes.h
+  #SysIncludeWin.h  SysTypesWin.h 
+  #SysTypesUnix.h
+  #SysIncludeBSD.h SysTypesBSD.h 
+  #SysIncludeLinux.h SysTypesLinux.h
+  #SysIncludeSolaris.h SysTypesSolaris.h 
 endif(UNIX)
 
-
+# Specify headers to include them into the Visual Studion Project
+# It would compile as well without specifying them
 set( COMMONSRCS 
-	Base64Enc.cpp
-	BuffSock.cpp
-	Errors.cpp
-	MD5.cpp
-	MiscUtils.cpp
-	SSLBind.cpp
-	SSLMisc.cpp
-	StrUtils.cpp
-	SysDepCommon.cpp
+  Base64Enc.cpp Base64Enc.h
+  BuffSock.cpp BuffSock.h 
+  Errors.cpp Errors.h
+  MD5.cpp MD5.h
+  MiscUtils.cpp MiscUtils.h
+  SSLBind.cpp SSLBind.h
+  SSLMisc.cpp SSLMisc.h
+  StrUtils.cpp StrUtils.h 
+  SysDepCommon.cpp
+  AppDefines.h
+  CommTypes.h
 )
 
 
 set( SVRSRCS ${MAINSRC} 
-    CTRLSvr.cpp 
-    DNS.cpp DNSCache.cpp 
-    ExtAliases.cpp FINGSvr.cpp MailConfig.cpp MailSvr.cpp 
-    Maildir.cpp MailDomains.cpp 
-    LMAILSvr.cpp AliasDomain.cpp POP3GwLink.cpp 
-    POP3Svr.cpp POP3Utils.cpp PSYNCSvr.cpp 
-    ResLocks.cpp SList.cpp SMAILSvr.cpp TabIndex.cpp SMAILUtils.cpp 
-    SMTPSvr.cpp SMTPUtils.cpp 
-    ShBlocks.cpp MessQueue.cpp QueueUtils.cpp 
-    SvrUtils.cpp UsrMailList.cpp UsrAuth.cpp 
-    UsrUtils.cpp Filter.cpp SSLConfig.cpp 
-    Hash.cpp Array.cpp 
-)
+  CTRLSvr.cpp  CTRLSvr.h
+  DNS.cpp  DNS.h
+  DNSCache.cpp  DNSCache.h
+  ExtAliases.cpp  ExtAliases.h
+  FINGSvr.cpp  FINGSvr.h
+  MailConfig.cpp  MailConfig.h
+  MailSvr.cpp  MailSvr.h
+  Maildir.cpp  Maildir.h
+  MailDomains.cpp  MailDomains.h
+  LMAILSvr.cpp  LMAILSvr.h
+  AliasDomain.cpp  AliasDomain.h
+  POP3GwLink.cpp  POP3GwLink.h
+  POP3Svr.cpp  POP3Svr.h
+  POP3Utils.cpp  POP3Utils.h
+  PSYNCSvr.cpp  PSYNCSvr.h
+  ResLocks.cpp  ResLocks.h
+  SList.cpp  SList.h
+  SMAILSvr.cpp  SMAILSvr.h
+  TabIndex.cpp  TabIndex.h
+  SMAILUtils.cpp  SMAILUtils.h
+  SMTPSvr.cpp  SMTPSvr.h
+  SMTPUtils.cpp  SMTPUtils.h
+  ShBlocks.cpp  ShBlocks.h
+  MessQueue.cpp  MessQueue.h
+  QueueUtils.cpp  QueueUtils.h
+  SvrUtils.cpp  SvrUtils.h
+  UsrMailList.cpp  UsrMailList.h
+  UsrAuth.cpp  UsrAuth.h
+  UsrUtils.cpp  UsrUtils.h
+  Filter.cpp  Filter.h
+  SSLConfig.cpp  SSLConfig.h
+  Hash.cpp  Hash.h
+  Array.cpp  Array.h
+  )
+
 
 set( CCLNSRCS CTRLClient.cpp )
 
